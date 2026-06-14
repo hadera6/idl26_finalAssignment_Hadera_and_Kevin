@@ -1,0 +1,46 @@
+# ── Data files — too large for GitHub ────────────────────────────────────
+data/
+*.pt
+
+# ── Model weights — too large for GitHub ─────────────────────────────────
+weights/
+*.pth
+
+# ── Results and plots — generated locally ────────────────────────────────
+results/
+*.png
+*.jpg
+
+# ── Notebooks — experimental, not submission ──────────────────────────────
+notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+# ── Python cache ──────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# ── Virtual environment ───────────────────────────────────────────────────
+venv/
+env/
+.env
+
+# ── IDE and OS files ──────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ── Codecarbon emissions logs ─────────────────────────────────────────────
+emissions.csv
+emissions/
+
+# ── Temporary files ───────────────────────────────────────────────────────
+*.tmp
+*.log
+*.bak
