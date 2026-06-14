@@ -15,8 +15,8 @@ def get_loaders(data, data_path, batch_size, val_split=0.1):
     val_size = int(total_samples * val_split)
     val_start = total_samples - val_size
 
-    train_data = data_dict['train_images']
-    train_labels = data_dict['train_labels']
+    train_data   = data_dict['train_images'][:val_start]
+    train_labels = data_dict['train_labels'][:val_start]
     val_data = data_dict['train_images'][val_start:]
     val_labels = data_dict['train_labels'][val_start:]
     
