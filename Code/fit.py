@@ -18,7 +18,8 @@ class Trainer:
         correct, sum = 0, 0
         
         for images, labels in dataloader:
-            images, labels = images.to(self.device), labels.to(self.device)
+            images = images.to(self.device)
+            labels = labels.squeeze().long().to(self.device)
             
             outputs = self.model(images)
             loss = self.criterion(outputs, labels)
