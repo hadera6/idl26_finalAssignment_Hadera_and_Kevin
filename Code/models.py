@@ -12,7 +12,7 @@ class VGGBlock(nn.Module):
 
     C configuration from Simonyan & Zisserman's VGG paper.
     """
-    def __init__(self, in_channels, out_channels, num_convs, padding=1):
+    def __init__(self, in_channels, out_channels, num_convs):
         super().__init__()
         layers = []
         current_in_channels = in_channels
