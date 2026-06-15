@@ -20,6 +20,8 @@ class Trainer:
         for images, labels in dataloader:
             images = images.to(self.device)
             labels = labels.squeeze().long().to(self.device)
+
+            self.optimizer.zero_grad()
             
             outputs = self.model(images)
             loss = self.criterion(outputs, labels)
@@ -41,7 +43,8 @@ class Trainer:
         
         with torch.no_grad():
             for images, labels in dataloader:
-                images, labels = images.to(self.device), labels.to(self.device)
+                images = images.to(self.device) 
+                labels = labels.squeeze().long().to(self.device)
                 
                 outputs = self.model(images)
                 loss = self.criterion(outputs, labels)
