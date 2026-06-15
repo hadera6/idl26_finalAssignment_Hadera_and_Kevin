@@ -33,6 +33,12 @@ def save_result(results_path, row):
         if not exists:
             w.writeheader()
         w.writerow(row)
+def already_done(weights_dir, dataset_name, model_name):
+    """Return True if weights for this run already exist on disk."""
+    return os.path.exists(
+        os.path.join(weights_dir, f"{dataset_name}_{model_name}.pth")
+    )
+
 
 def main():   
     with open("config.json", "r") as f:
@@ -74,6 +80,10 @@ def main():
             run_num += 1
             print(f"\n  [{run_num}/{total_runs}] {model_name} on {dataset_name}")
             print(f"  {'-'*50}")
+
+            if already_done(weights_dir, dataset_name, model_name):
+                print("  Already done — skipping.")
+                continue
 
             model_class = getattr(models, model_name)
             model = model_class(
