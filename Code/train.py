@@ -4,6 +4,8 @@ MAI/IDL SS26 - Final assignment.
 MG 6/6/2026
 """
 import json
+import os
+import csv
 
 import torch
 import torch.nn as nn
@@ -21,12 +23,28 @@ def compute_class_weights(train_labels, num_classes, device):
     weights = weights / weights.sum() * num_classes
     return weights.to(device)
 
+def save_result(results_path, row):
+    """Append one result row to benchmark CSV."""
+    fieldnames = ['dataset', 'model', 'test_acc',
+                  'precision', 'recall', 'f1']
+    exists = os.path.exists(results_path)
+    with open(results_path, 'a', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        if not exists:
+            w.writeheader()
+        w.writerow(row)
+
 def main():   
     with open("config.json", "r") as f:
         config = json.load(f)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training executing on device: {device}")
+
+    weights_dir  = config["WEIGHTS_PATH"]
+    results_path = config["RESULTS_PATH"]
+    os.makedirs(weights_dir, exist_ok=True)
+    os.makedirs(os.path.dirname(results_path) or ".", exist_ok=True)
 
     dataset_configs = config["DATASETS"]
     model_names     = config["MODELS"]
@@ -66,7 +84,7 @@ def main():
                 activation_str = config.get("ACTIVATION", "ReLU")
             ).to(device)
 
-            criterion = nn.CrossEntropyLoss()
+            criterion = nn.CrossEntropyLoss(weight=class_weights)
             optimizer = optim.Adam(model.parameters(), lr=config["LEARNING_RATE"])
 
             trainer = Trainer(model, criterion, optimizer, device)
@@ -78,6 +96,27 @@ def main():
                     f"Acc: {test_acc:.2f}% | "
                     f"P: {prec:.4f} | R: {rec:.4f} | F1: {f1:.4f}")
 
+            weight_path = os.path.join(
+                weights_dir, f"{dataset_name}_{model_name}.pth")
+            torch.save(model.state_dict(), weight_path)
+            print(f"  Weights saved → {weight_path}")
+
+            # FIX 19 — save result immediately after each run
+            save_result(results_path, {
+                'dataset':   dataset_name,
+                'model':     model_name,
+                'test_acc':  round(test_acc, 2),
+                'precision': round(prec, 4),
+                'recall':    round(rec, 4),
+                'f1':        round(f1, 4)
+            })
+
+            del model
+            torch.cuda.empty_cache()
+
+    print(f"\n{'='*60}")
+    print("All runs complete!")
+    print(f"Results saved to: {results_path}")
 
 if __name__ == "__main__":
     main()
