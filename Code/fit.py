@@ -4,6 +4,7 @@ MAI/IDL SS26 - Final assignment.
 MG 6/6/2026
 """
 import torch
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 class Trainer:
     def __init__(self, model, criterion, optimizer, device):
@@ -40,6 +41,7 @@ class Trainer:
         self.model.eval()
         running_loss = 0.0
         correct, total = 0, 0
+        all_preds, all_labels = [], []
         
         with torch.no_grad():
             for images, labels in dataloader:
@@ -53,8 +55,17 @@ class Trainer:
                 _, predicted = outputs.max(1)
                 total += labels.size(0)
                 correct += predicted.eq(labels).sum().item()
-                
-        return running_loss / total, (correct / total) * 100
+                all_preds.extend(predicted.cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())  
+
+        acc  = (correct / total) * 100
+        loss = running_loss / total
+        
+        prec = precision_score(all_labels, all_preds, average='macro', zero_division=0)
+        rec  = recall_score(all_labels,   all_preds, average='macro', zero_division=0)
+        f1   = f1_score(all_labels,       all_preds, average='macro', zero_division=0)
+
+        return loss, acc, prec, rec, f1
 
     def fit(self, train_loader, val_loader, epochs):
         print("\n Starting Training Routine...")
