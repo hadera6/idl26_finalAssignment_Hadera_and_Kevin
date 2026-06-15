@@ -73,7 +73,7 @@ class Trainer:
         
         for epoch in range(epochs):
             train_loss, train_acc = self.train_one_epoch(train_loader)
-            val_loss, val_acc = self.evaluate(val_loader)
+            val_loss, val_acc, *_ = self.evaluate(val_loader)
             
             print(f"Epoch [{epoch+1:02d}/{epochs:02d}] | "
                   f"Train Loss: {train_loss:.4f} - Train Acc: {train_acc:.2f}% | "
