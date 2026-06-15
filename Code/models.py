@@ -6,8 +6,6 @@ MG 6/6/2026
 import torch
 import torch.nn as nn
 
-activation_str = "Identity"  # Placeholder for activation function, can be replaced with "ReLU" or others as needed.
-
 
 class VGGBlock(nn.Module):
     """Modular VGG block with configurable number of conv layers and channels.
@@ -146,6 +144,7 @@ class ResNet18(nn.Module):
     def __init__(self, in_channels, num_classes, **kwargs):
         super().__init__()
 
+        activation_str = kwargs.get("activation_str", "ReLU")
         activation = getattr(nn, activation_str)
 
         self.conv1 = nn.Conv2d(in_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
