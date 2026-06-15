@@ -19,7 +19,11 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training executing on device: {device}")
 
-    train_loader, val_loader, _ = get_loaders(data=config["DATA"], data_path=config["DATA_PATH"], batch_size=config["BATCH_SIZE"])
+    train_loader, val_loader, test_loader = get_loaders(
+        data=config["DATA"], 
+        data_path=config["DATA_PATH"], 
+        batch_size=config["BATCH_SIZE"]
+    )
 
     model_class = getattr(models, config["MODEL"])
     model = model_class(
@@ -34,6 +38,13 @@ def main():
 
     trainer = Trainer(model, criterion, optimizer, device)
     trainer.fit(train_loader, val_loader, epochs=config["EPOCHS"])
+    
+    
+    test_loss, test_acc, prec, rec, f1 = trainer.evaluate(test_loader)
+    print(f"\n  TEST → Loss: {test_loss:.4f} | "
+            f"Acc: {test_acc:.2f}% | "
+            f"P: {prec:.4f} | R: {rec:.4f} | F1: {f1:.4f}")
+
 
 if __name__ == "__main__":
     main()
