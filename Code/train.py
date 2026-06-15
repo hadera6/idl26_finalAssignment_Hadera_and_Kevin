@@ -65,7 +65,7 @@ def main():
         print(f"  Loading: {dataset_name.upper()}")
 
         train_loader, val_loader, test_loader = get_loaders(
-            data=config["DATA"], 
+            data=dataset_name, 
             data_path=config["DATA_PATH"], 
             batch_size=config["BATCH_SIZE"]
         )
