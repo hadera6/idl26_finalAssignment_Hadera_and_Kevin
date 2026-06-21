@@ -90,9 +90,10 @@ class AlexNet(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
         )
         
+        self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
             nn.Dropout(p=drop_rate),
-            nn.Linear(3072, 1024),
+            nn.Linear(192, 1024),
             nn.ReLU(inplace=True),
             nn.Dropout(p=drop_rate),
             nn.Linear(1024, 1024),
@@ -104,6 +105,7 @@ class AlexNet(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
+        x = self.avgpool(x)
         x = torch.flatten(x, 1)
         return self.classifier(x)
 
@@ -123,8 +125,9 @@ class VGG16(nn.Module):
             VGGBlock(512, 512, num_convs=3)
         )
         
+        self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
-            nn.Linear(2048, 1024),
+            nn.Linear(512, 1024),
             nn.ReLU(inplace=True),
             nn.Dropout(p=drop_rate),
             nn.Linear(1024, 512),
@@ -135,6 +138,7 @@ class VGG16(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
+        x = self.avgpool(x)
         x = torch.flatten(x, 1)
         return self.classifier(x)
 
