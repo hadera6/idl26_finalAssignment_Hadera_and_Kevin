@@ -14,15 +14,6 @@ from data import get_loaders
 import models
 from fit import Trainer
 
-def compute_class_weights(train_labels, num_classes, device):
-    """Inverse frequency weights to handle class imbalance."""
-    train_labels = train_labels.squeeze().long()
-    counts  = torch.bincount(train_labels, minlength=num_classes).float()
-    counts  = counts.clamp(min=1)
-    weights = 1.0 / counts
-    weights = weights / weights.sum() * num_classes
-    return weights.to(device)
-
 def save_result(results_path, row):
     """Append one result row to benchmark CSV."""
     fieldnames = ['dataset', 'model', 'test_acc',
@@ -70,12 +61,6 @@ def main():
             batch_size=config["BATCH_SIZE"]
         )
 
-        train_labels_all = torch.cat(
-            [y for _, y in train_loader]).squeeze().long()
-        class_weights = compute_class_weights(
-            train_labels_all, num_classes, device)
-        print(f"  Class weights: {class_weights.cpu().numpy().round(3)}")
-
         for model_name in model_names:
             run_num += 1
             print(f"\n  [{run_num}/{total_runs}] {model_name} on {dataset_name}")
@@ -94,7 +79,7 @@ def main():
                 activation_str = config.get("ACTIVATION", "ReLU")
             ).to(device)
 
-            criterion = nn.CrossEntropyLoss(weight=class_weights)
+            criterion = nn.CrossEntropyLoss()
             optimizer = optim.Adam(model.parameters(), lr=config["LEARNING_RATE"])
 
             trainer = Trainer(model, criterion, optimizer, device)
@@ -110,8 +95,6 @@ def main():
                 weights_dir, f"{dataset_name}_{model_name}.pth")
             torch.save(model.state_dict(), weight_path)
             print(f"  Weights saved → {weight_path}")
-
-            # FIX 19 — save result immediately after each run
             save_result(results_path, {
                 'dataset':   dataset_name,
                 'model':     model_name,
