@@ -3,6 +3,7 @@ MAI/IDL SS26 - Final assignment.
 
 MG 6/6/2026
 """
+import copy
 import torch
 from sklearn.metrics import precision_score, recall_score, f1_score
 
@@ -67,13 +68,18 @@ class Trainer:
 
         return loss, acc, prec, rec, f1
 
-    def fit(self, train_loader, val_loader, epochs):
+    def fit(self, train_loader, val_loader, epochs,
+            scheduler=None,
+            ):
         print("\n Starting Training Routine...")
         print("-" * 50)
         
         for epoch in range(epochs):
             train_loss, train_acc = self.train_one_epoch(train_loader)
             val_loss, val_acc, *_ = self.evaluate(val_loader)
+
+            if scheduler is not None:                                          # D.3
+                scheduler.step()
             
             print(f"Epoch [{epoch+1:02d}/{epochs:02d}] | "
                   f"Train Loss: {train_loss:.4f} - Train Acc: {train_acc:.2f}% | "

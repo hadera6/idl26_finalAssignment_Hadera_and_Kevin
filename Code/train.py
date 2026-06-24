@@ -86,12 +86,17 @@ def main():
                 lr=ds_cfg.get("LEARNING_RATE", config["LEARNING_RATE"])
             )
 
-            epochs        = ds_cfg.get("EPOCHS", config["EPOCHS"])  
+            epochs        = ds_cfg.get("EPOCHS", config["EPOCHS"])
+
+            use_scheduler = ds_cfg.get("USE_SCHEDULER", True)                 # D.1
+            scheduler     = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=epochs) if use_scheduler else None   
 
             trainer = Trainer(model, criterion, optimizer, device)
             trainer.fit(
                 train_loader, val_loader, 
-                epochs=epochs
+                epochs=epochs,
+                scheduler  = scheduler
             )
             
             
