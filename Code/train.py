@@ -14,6 +14,15 @@ from data import get_loaders
 import models
 from fit import Trainer
 
+def compute_class_weights(train_labels, num_classes, device):                  
+    """Inverse frequency weights to handle class imbalance."""
+    train_labels = train_labels.squeeze().long()
+    counts  = torch.bincount(train_labels, minlength=num_classes).float()
+    counts  = counts.clamp(min=1)
+    weights = 1.0 / counts
+    weights = weights / weights.sum() * num_classes
+    return weights.to(device)
+
 def save_result(results_path, row):
     """Append one result row to benchmark CSV."""
     fieldnames = ['dataset', 'model', 'test_acc',
@@ -24,6 +33,7 @@ def save_result(results_path, row):
         if not exists:
             w.writeheader()
         w.writerow(row)
+
 def already_done(weights_dir, dataset_name, model_name):
     """Return True if weights for this run already exist on disk."""
     return os.path.exists(
@@ -60,7 +70,13 @@ def main():
             data_path=config["DATA_PATH"], 
             batch_size=config["BATCH_SIZE"]
         )
-
+ 
+        train_labels_all = torch.cat(                                          
+            [y for _, y in train_loader]).squeeze().long()
+        class_weights = compute_class_weights(                                
+            train_labels_all, num_classes, device)
+        print(f"  Class weights: {class_weights.cpu().numpy().round(3)}")
+        
         for model_name in model_names:
             run_num += 1
             print(f"\n  [{run_num}/{total_runs}] {model_name} on {dataset_name}")
@@ -80,7 +96,7 @@ def main():
             
             ).to(device)
 
-            criterion = nn.CrossEntropyLoss()
+            criterion = nn.CrossEntropyLoss(weight=class_weights)
             optimizer = optim.Adam(
                 model.parameters(), 
                 lr=ds_cfg.get("LEARNING_RATE", config["LEARNING_RATE"])
