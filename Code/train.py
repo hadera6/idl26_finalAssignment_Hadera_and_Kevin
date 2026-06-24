@@ -90,13 +90,18 @@ def main():
 
             use_scheduler = ds_cfg.get("USE_SCHEDULER", True)                 # D.1
             scheduler     = torch.optim.lr_scheduler.CosineAnnealingLR(
-                optimizer, T_max=epochs) if use_scheduler else None   
+                optimizer, T_max=epochs) if use_scheduler else None 
+
+            patience   = ds_cfg.get("PATIENCE",  config.get("PATIENCE", 10))
+            no_restore = ds_cfg.get("NO_RESTORE", False)                        
 
             trainer = Trainer(model, criterion, optimizer, device)
             trainer.fit(
                 train_loader, val_loader, 
                 epochs=epochs,
-                scheduler  = scheduler
+                scheduler  = scheduler,
+                patience   = patience,                                         # E.2
+                no_restore = no_restore
             )
             
             
