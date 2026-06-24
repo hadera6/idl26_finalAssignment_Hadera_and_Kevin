@@ -88,7 +88,7 @@ def main():
 
             epochs        = ds_cfg.get("EPOCHS", config["EPOCHS"])
 
-            use_scheduler = ds_cfg.get("USE_SCHEDULER", True)                 # D.1
+            use_scheduler = ds_cfg.get("USE_SCHEDULER", True)                 
             scheduler     = torch.optim.lr_scheduler.CosineAnnealingLR(
                 optimizer, T_max=epochs) if use_scheduler else None 
 
@@ -100,7 +100,7 @@ def main():
                 train_loader, val_loader, 
                 epochs=epochs,
                 scheduler  = scheduler,
-                patience   = patience,                                         # E.2
+                patience   = patience,                                         
                 no_restore = no_restore
             )
             
