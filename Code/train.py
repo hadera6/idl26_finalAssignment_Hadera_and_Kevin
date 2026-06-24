@@ -75,15 +75,24 @@ def main():
                 in_channels    = channels,
                 num_classes    = num_classes,
                     
-                drop_rate      = config.get("DROP_RATE", 0.5),
-                activation_str = config.get("ACTIVATION", "ReLU")
+                drop_rate      = ds_cfg.get("DROP_RATE",     config.get("DROP_RATE", 0.5)),
+                activation_str = ds_cfg.get("ACTIVATION",    config.get("ACTIVATION", "ReLU"))
+            
             ).to(device)
 
             criterion = nn.CrossEntropyLoss()
-            optimizer = optim.Adam(model.parameters(), lr=config["LEARNING_RATE"])
+            optimizer = optim.Adam(
+                model.parameters(), 
+                lr=ds_cfg.get("LEARNING_RATE", config["LEARNING_RATE"])
+            )
+
+            epochs        = ds_cfg.get("EPOCHS", config["EPOCHS"])  
 
             trainer = Trainer(model, criterion, optimizer, device)
-            trainer.fit(train_loader, val_loader, epochs=config["EPOCHS"])
+            trainer.fit(
+                train_loader, val_loader, 
+                epochs=epochs
+            )
             
             
             test_loss, test_acc, prec, rec, f1 = trainer.evaluate(test_loader)
