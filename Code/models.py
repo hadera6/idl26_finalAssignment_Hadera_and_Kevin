@@ -256,6 +256,38 @@ class VGG16Lite(nn.Module):
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         return self.classifier(x)
+    
+class ResNet18Lite(nn.Module):                                                 
+    #ResNet18 with reduced complexity 
+
+    def __init__(self, in_channels, num_classes, **kwargs):
+        super().__init__()
+        activation_str = kwargs.get("activation_str", "ReLU")
+        activation     = getattr(nn, activation_str)
+
+        self.conv1      = nn.Conv2d(in_channels, 32, kernel_size=3,
+                                    stride=1, padding=1, bias=False)
+        self.bn1        = nn.BatchNorm2d(32)
+        self.activation = activation(inplace=True)
+
+        self.stage1 = nn.Sequential(
+            ResBlock(32, 32, activation(inplace=True), stride=1),
+            ResBlock(32, 32, activation(inplace=True), stride=1)
+        )
+        self.stage2 = nn.Sequential(
+            ResBlock(32, 64, activation(inplace=True), stride=2),
+            ResBlock(64, 64, activation(inplace=True), stride=1)
+        )
+        self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(64, num_classes)
+
+    def forward(self, x):
+        out = self.activation(self.bn1(self.conv1(x)))
+        out = self.stage1(out)
+        out = self.stage2(out)
+        out = self.avgpool(out)
+        out = torch.flatten(out, 1)
+        return self.classifier(out)
 
 
 
