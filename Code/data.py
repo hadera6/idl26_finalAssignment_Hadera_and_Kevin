@@ -7,7 +7,7 @@ import torch
 from pathlib import Path
 from torch.utils.data import TensorDataset, DataLoader
 
-def get_loaders(data, data_path, batch_size, val_split=0.1):
+def get_loaders(data, data_path, batch_size,seed=0, val_split=0.1):
     d_path = Path(data_path) / f"{data}_data.pt"
     data_dict = torch.load(d_path)
 
@@ -33,8 +33,11 @@ def get_loaders(data, data_path, batch_size, val_split=0.1):
     train_dataset = TensorDataset(train_data, train_labels)
     val_dataset = TensorDataset(val_data, val_labels)
     test_dataset  = TensorDataset(test_data,   test_labels)
+
+    g = torch.Generator()
+    g.manual_seed(seed)
     
-    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,generator=g)
     val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
     

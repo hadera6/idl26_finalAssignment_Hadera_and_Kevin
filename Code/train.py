@@ -57,6 +57,10 @@ def main():
     with open("config.json", "r") as f:
         config = json.load(f)
 
+    seed = config.get("SEED", 0)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training executing on device: {device}")
 
@@ -80,12 +84,6 @@ def main():
 
         print(f"\n{'='*60}")
         print(f"  Loading: {dataset_name.upper()}")
-
-        train_loader, val_loader, test_loader = get_loaders(
-            data=dataset_name, 
-            data_path=config["DATA_PATH"], 
-            batch_size=config["BATCH_SIZE"]
-        )
  
         train_labels_all = torch.cat(                                          
             [y for _, y in train_loader]).squeeze().long()
@@ -94,6 +92,13 @@ def main():
         print(f"  Class weights: {class_weights.cpu().numpy().round(3)}")
         
         for model_name in model_names:
+
+            train_loader, val_loader, test_loader = get_loaders(
+              data=dataset_name, 
+              data_path=config["DATA_PATH"],
+              batch_size=config["BATCH_SIZE"],
+              seed=seed
+            )
             run_num += 1
             print(f"\n  [{run_num}/{total_runs}] {model_name} on {dataset_name}")
             print(f"  {'-'*50}")
