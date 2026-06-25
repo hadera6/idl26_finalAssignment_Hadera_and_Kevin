@@ -141,7 +141,8 @@ def main():
 
             trainer = Trainer(model, criterion, optimizer, device)
 
-            torch.cuda.reset_peak_memory_stats()                               
+            if device.type == 'cuda':                          
+              torch.cuda.reset_peak_memory_stats()                               
             train_start = time.time()
 
             trainer.fit(
