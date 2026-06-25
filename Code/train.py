@@ -168,7 +168,10 @@ def main():
                     torch.cuda.synchronize()
                 latency_ms = (time.time() - t0) / len(batch_images) * 1000    
 
-            peak_memory_mb = torch.cuda.max_memory_allocated() / 1024 ** 2    
+            if device.type == 'cuda':
+              peak_memory_mb = torch.cuda.max_memory_allocated() / 1024 ** 2
+            else:
+              peak_memory_mb = 0.0
             
             
             test_loss, test_acc, prec, rec, f1 = trainer.evaluate(test_loader)
