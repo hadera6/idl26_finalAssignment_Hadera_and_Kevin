@@ -84,11 +84,18 @@ def main():
 
         print(f"\n{'='*60}")
         print(f"  Loading: {dataset_name.upper()}")
- 
-        train_labels_all = torch.cat(                                          
-            [y for _, y in train_loader]).squeeze().long()
-        class_weights = compute_class_weights(                                
-            train_labels_all, num_classes, device)
+
+        # Call 1 — temp load for label extraction only
+        tmp_loader, _, _ = get_loaders(
+            data=dataset_name, 
+            data_path=config["DATA_PATH"],
+            batch_size=config["BATCH_SIZE"],
+            seed=seed
+        )
+        train_labels_all = torch.cat(
+            [y for _, y in tmp_loader]).squeeze().long()
+        class_weights = compute_class_weights(train_labels_all, num_classes, device)
+        
         print(f"  Class weights: {class_weights.cpu().numpy().round(3)}")
         
         for model_name in model_names:
