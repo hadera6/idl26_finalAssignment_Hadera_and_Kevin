@@ -15,6 +15,74 @@ from data import get_loaders
 import models
 from fit import Trainer
 
+def load_pretrained_weights(model, weights_dir, source_dataset, model_name, device):
+    """Load weights from a previously trained source dataset into the model.
+    """
+    weight_path = os.path.join(weights_dir, f"{source_dataset}_{model_name}.pth")
+    if not os.path.exists(weight_path):
+        print(f"  [Transfer] WARNING: pretrained weights not found at {weight_path}. "
+              "Training from scratch instead.")
+        return False
+
+    state_dict = torch.load(weight_path, map_location=device)
+
+    # Drop classifier weights — head is re-initialised for the target task
+    backbone_state = {
+        k: v for k, v in state_dict.items()
+        if not k.startswith("classifier")
+    }
+    missing, unexpected = model.load_state_dict(backbone_state, strict=False)
+    print(f"  [Transfer] Loaded backbone from '{source_dataset}_{model_name}.pth'")
+    if missing:
+        classifier_missing = [k for k in missing if "classifier" in k]
+        print(f"  [Transfer] Keys re-initialised (expected — classifier head): "
+              f"{classifier_missing}")
+    return True
+def freeze_stages(model, model_name, num_frozen_stages):
+    """Freeze a proportion of the backbone scaled to each architecture's depth.
+    """
+    if num_frozen_stages <= 0:
+        return
+
+    if model_name == "ResNet18":
+        stage_attrs = ["conv1", "bn1", "stage1", "stage2", "stage3", "stage4"]
+        to_freeze = stage_attrs[:num_frozen_stages]
+        for attr in to_freeze:
+            module = getattr(model, attr, None)
+            if module is not None:
+                for param in module.parameters():
+                    param.requires_grad = False
+        print(f"  [Transfer] Frozen ResNet stages: {to_freeze}")
+
+    elif model_name == "VGG16":
+        children = list(model.features.children())
+        n_to_freeze = max(1, min(len(children) - 1,
+                                 round(num_frozen_stages * len(children) / 6)))
+        for child in children[:n_to_freeze]:
+            for param in child.parameters():
+                param.requires_grad = False
+        print(f"  [Transfer] VGG16: frozen first {n_to_freeze}/{len(children)} blocks")
+
+    else:  # AlexNet: group layers into MaxPool-delimited blocks, freeze proportionally
+        children = list(model.features.children())
+        blocks, current = [], []
+        for layer in children:
+            current.append(layer)
+            if layer.__class__.__name__ == "MaxPool2d":
+                blocks.append(current)
+                current = []
+        if current:
+            blocks.append(current)
+        n_blocks = len(blocks)
+        n_to_freeze = max(1, min(n_blocks - 1,
+                                 round(num_frozen_stages * n_blocks / 6)))
+        layers_to_freeze = [l for b in blocks[:n_to_freeze] for l in b]
+        for layer in layers_to_freeze:
+            for param in layer.parameters():
+                param.requires_grad = False
+        print(f"  [Transfer] AlexNet: frozen first {n_to_freeze}/{n_blocks} conv blocks")
+
+
 def compute_class_weights(train_labels, num_classes, device):                  
     """Inverse frequency weights to handle class imbalance."""
     train_labels = train_labels.squeeze().long()
