@@ -74,8 +74,7 @@ def main():
     os.makedirs(os.path.dirname(profiling_path), exist_ok=True)
 
     dataset_configs = config["DATASETS"]
-    model_names     = config["MODELS"]
-    total_runs      = len(dataset_configs) * len(model_names)
+    total_runs = sum(len(ds_cfg["MODELS"]) for ds_cfg in dataset_configs.values())
     run_num         = 0
 
     for dataset_name, ds_cfg in dataset_configs.items():
@@ -98,6 +97,8 @@ def main():
         
         print(f"  Class weights: {class_weights.cpu().numpy().round(3)}")
         
+        model_names = ds_cfg["MODELS"]
+
         for model_name in model_names:
 
             train_loader, val_loader, test_loader = get_loaders(
