@@ -94,7 +94,7 @@ def compute_class_weights(train_labels, num_classes, device):
 
 def save_result(results_path, row):
     """Append one result row to benchmark CSV."""
-    fieldnames = ['dataset', 'model', 'test_acc',
+    fieldnames = ['dataset', 'model', 'training_state', 'test_acc',
                   'precision', 'recall', 'f1']
     exists = os.path.exists(results_path)
     with open(results_path, 'a', newline='') as f:
@@ -103,10 +103,11 @@ def save_result(results_path, row):
             w.writeheader()
         w.writerow(row)
 
-def already_done(weights_dir, dataset_name, model_name):
+def already_done(weights_dir, dataset_name, model_name, training_state="scratch"):
     """Return True if weights for this run already exist on disk."""
+    suffix = "" if training_state == "scratch" else f"_{training_state}"
     return os.path.exists(
-        os.path.join(weights_dir, f"{dataset_name}_{model_name}.pth")
+        os.path.join(weights_dir, f"{dataset_name}_{model_name}{suffix}.pth")
     )
 
 def save_profiling(profiling_path, row):                                       
@@ -182,7 +183,12 @@ def main():
             transfer_source  = ds_cfg.get("TRANSFER_FROM", None)
             num_frozen_stages = ds_cfg.get("FROZEN_STAGES", 0)
 
-            if already_done(weights_dir, dataset_name, model_name):
+            if not transfer_source:
+                training_state = "scratch"
+            else:
+                training_state = f"freeze_{num_frozen_stages}"
+
+            if already_done(weights_dir, dataset_name, model_name, training_state):
                 print("  Already done — skipping.")
                 continue
 
@@ -276,14 +282,16 @@ def main():
             print(f"\n  TEST → Loss: {test_loss:.4f} | "
                     f"Acc: {test_acc:.2f}% | "
                     f"P: {prec:.4f} | R: {rec:.4f} | F1: {f1:.4f}")
-
+            
+            suffix      = "" if training_state == "scratch" else f"_{training_state}"
             weight_path = os.path.join(
-                weights_dir, f"{dataset_name}_{model_name}.pth")
+                weights_dir, f"{dataset_name}_{model_name}{suffix}.pth")
             torch.save(model.state_dict(), weight_path)
             print(f"  Weights saved → {weight_path}")
             save_result(results_path, {
                 'dataset':   dataset_name,
                 'model':     model_name,
+                'training_state': training_state,
                 'test_acc':  round(test_acc, 2),
                 'precision': round(prec, 4),
                 'recall':    round(rec, 4),
