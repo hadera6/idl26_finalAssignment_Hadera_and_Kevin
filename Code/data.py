@@ -5,9 +5,28 @@ MG 6/6/2026
 """
 import torch
 from pathlib import Path
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import TensorDataset, DataLoader, Dataset
+import torchvision.transforms.v2 as T
 
-def get_loaders(data, data_path, batch_size,seed=0, val_split=0.1):
+class AugmentedDataset(Dataset):
+    """Wraps a TensorDataset and applies random augmentation on the fly.
+    """
+    def __init__(self, images, labels):
+        self.images = images
+        self.labels = labels
+        self.transform = T.Compose([
+            T.RandomRotation(degrees=8),
+            T.RandomAffine(degrees=0, translate=(0.05, 0.05), scale=(0.95, 1.05)),
+        ])
+
+    def __len__(self):
+        return self.images.shape[0]
+
+    def __getitem__(self, idx):
+        img = self.transform(self.images[idx])
+        return img, self.labels[idx]
+
+def get_loaders(data, data_path, batch_size,seed=0, val_split=0.1,augment=False):
     d_path = Path(data_path) / f"{data}_data.pt"
     data_dict = torch.load(d_path)
 
@@ -30,7 +49,13 @@ def get_loaders(data, data_path, batch_size,seed=0, val_split=0.1):
     val_data   = (val_data   - mean) / std
     test_data  = (test_data  - mean) / std
     
-    train_dataset = TensorDataset(train_data, train_labels)
+    if augment:
+        train_dataset = AugmentedDataset(train_data, train_labels)
+        print(f"  [Data] Augmentation ENABLED for '{data}' train set "
+              f"({train_data.shape[0]} samples — flips/rotation/translation)")
+    else:
+        train_dataset = TensorDataset(train_data, train_labels)
+
     val_dataset = TensorDataset(val_data, val_labels)
     test_dataset  = TensorDataset(test_data,   test_labels)
 
