@@ -179,6 +179,9 @@ def main():
             print(f"\n  [{run_num}/{total_runs}] {model_name} on {dataset_name}")
             print(f"  {'-'*50}")
 
+            transfer_source  = ds_cfg.get("TRANSFER_FROM", None)
+            num_frozen_stages = ds_cfg.get("FROZEN_STAGES", 0)
+
             if already_done(weights_dir, dataset_name, model_name):
                 print("  Already done — skipping.")
                 continue
@@ -193,10 +196,35 @@ def main():
             
             ).to(device)
 
+
+            # ── Transfer learning ──────────────────────────────────────────
+            transfer_ok = False
+            if transfer_source:
+                print(f"  [Transfer] Source dataset: '{transfer_source}' → "
+                      f"Target: '{dataset_name}'")
+                transfer_ok = load_pretrained_weights(
+                    model, weights_dir, transfer_source, model_name, device
+                )
+                if transfer_ok and num_frozen_stages > 0:
+                    freeze_stages(model, model_name, num_frozen_stages)
+                    trainable = sum(
+                        p.numel() for p in model.parameters() if p.requires_grad
+                    )
+                    total = sum(p.numel() for p in model.parameters())
+                    print(f"  [Transfer] Trainable params: "
+                          f"{trainable:,} / {total:,} "
+                          f"({100*trainable/total:.1f}%)")
+            # ──────────────────────────────────────────────────────────────
+
+
             criterion = nn.CrossEntropyLoss(weight=class_weights)
+            
+            lr = ds_cfg.get("LEARNING_RATE", config["LEARNING_RATE"])
+            weight_decay = ds_cfg.get("WEIGHT_DECAY", 0.0)
             optimizer = optim.Adam(
-                model.parameters(), 
-                lr=ds_cfg.get("LEARNING_RATE", config["LEARNING_RATE"])
+                filter(lambda p: p.requires_grad, model.parameters()),
+                lr=lr,
+                weight_decay=weight_decay
             )
 
             epochs        = ds_cfg.get("EPOCHS", config["EPOCHS"])
