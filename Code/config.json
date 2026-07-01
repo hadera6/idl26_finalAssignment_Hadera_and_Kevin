@@ -2,36 +2,61 @@
     "DATA_PATH": "data/",
     "WEIGHTS_PATH": "weights/",
     "RESULTS_PATH": "results/benchmark.csv",
-    "MODELS": [
-        "AlexNet",
-        "VGG16",
-        "ResNet18"
-    ],
+    "PROFILING_PATH": "results/profiling.csv",
+
     "BATCH_SIZE": 64,
     "EPOCHS": 20,
     "LEARNING_RATE": 0.001,
     "DROP_RATE": 0.5,
     "ACTIVATION": "ReLU",
+    "PATIENCE": 10,
+    "SEED": 0,
+
     "DATASETS": {
         "cells": {
+            "MODELS": ["ResNet18"],
             "CHANNELS": 3,
-            "NUM_CLASSES": 8
+            "NUM_CLASSES": 8,
+            "EPOCHS": 30,
+            "LEARNING_RATE": 0.0005,
+            "DROP_RATE": 0.3
         },
         "chest": {
+            "MODELS": ["VGG16"],
             "CHANNELS": 1,
-            "NUM_CLASSES": 2
+            "NUM_CLASSES": 2,
+            "EPOCHS": 20,
+            "LEARNING_RATE": 0.001,
+            "DROP_RATE": 0.5
         },
         "lesions": {
+            "MODELS": ["AlexNet"],
             "CHANNELS": 3,
-            "NUM_CLASSES": 7
+            "NUM_CLASSES": 7,
+            "EPOCHS": 60,
+            "LEARNING_RATE": 0.0005,
+            "DROP_RATE": 0.5,
+            "PATIENCE": 999,
+            "USE_SCHEDULER": false,
+            "NO_RESTORE": true
         },
         "organs": {
+            "MODELS": ["ResNet18"],
             "CHANNELS": 1,
-            "NUM_CLASSES": 11
+            "NUM_CLASSES": 11,
+            "EPOCHS": 30,
+            "LEARNING_RATE": 0.0001,
+            "DROP_RATE": 0.3,
+            "TRANSFER_FROM": "orgs",
+            "FROZEN_STAGES": 0
         },
         "orgs": {
+            "MODELS": ["ResNet18"],
             "CHANNELS": 1,
-            "NUM_CLASSES": 11
+            "NUM_CLASSES": 11,
+            "EPOCHS": 20,
+            "LEARNING_RATE": 0.001,
+            "DROP_RATE": 0.5
         }
     }
 }
