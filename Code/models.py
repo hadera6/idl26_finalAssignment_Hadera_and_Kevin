@@ -240,7 +240,7 @@ class VGG16Lite(nn.Module):
             VGGBlock(64,128, num_convs=2),
         )
  
-        self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
             nn.Dropout(p=drop_rate),
             nn.Linear(128, num_classes),
@@ -252,34 +252,50 @@ class VGG16Lite(nn.Module):
         x = torch.flatten(x, 1)
         return self.classifier(x)
     
-class ResNet18Lite(nn.Module):                                                 
-    #ResNet18 with reduced complexity 
+class ResNet18Lite(nn.Module):
 
+    #ResNet18 with reduced complexity
+ 
     def __init__(self, in_channels, num_classes, **kwargs):
         super().__init__()
         activation_str = kwargs.get("activation_str", "ReLU")
-        activation     = getattr(nn, activation_str)
-
-        self.conv1      = nn.Conv2d(in_channels, 32, kernel_size=3,
-                                    stride=1, padding=1, bias=False)
-        self.bn1        = nn.BatchNorm2d(32)
-        self.activation = activation(inplace=True)
-
+        drop_rate = kwargs.get("drop_rate", 0.5)
+        act = getattr(nn, activation_str)
+ 
+        self.conv1 = nn.Conv2d(in_channels, 9, kernel_size=3,
+                                stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(9)
+        self.activation = act(inplace=True)
+ 
         self.stage1 = nn.Sequential(
-            ResBlock(32, 32, activation(inplace=True), stride=1),
-            ResBlock(32, 32, activation(inplace=True), stride=1)
+            ResBlock(9,  9,  act(inplace=True), stride=1),
+            ResBlock(9,  9,  act(inplace=True), stride=1),
         )
         self.stage2 = nn.Sequential(
-            ResBlock(32, 64, activation(inplace=True), stride=2),
-            ResBlock(64, 64, activation(inplace=True), stride=1)
+            ResBlock(9,  18, act(inplace=True), stride=2),
+            ResBlock(18, 18, act(inplace=True), stride=1),
         )
-        self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier = nn.Linear(64, num_classes)
-
+        self.stage3 = nn.Sequential(
+            ResBlock(18, 36, act(inplace=True), stride=2),
+            ResBlock(36, 36, act(inplace=True), stride=1),
+        )
+        self.stage4 = nn.Sequential(
+            ResBlock(36, 72, act(inplace=True), stride=2),
+            ResBlock(72, 72, act(inplace=True), stride=1),
+        )
+ 
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=drop_rate),
+            nn.Linear(72, num_classes),
+        )
+ 
     def forward(self, x):
         out = self.activation(self.bn1(self.conv1(x)))
         out = self.stage1(out)
         out = self.stage2(out)
+        out = self.stage3(out)
+        out = self.stage4(out)
         out = self.avgpool(out)
         out = torch.flatten(out, 1)
         return self.classifier(out)
