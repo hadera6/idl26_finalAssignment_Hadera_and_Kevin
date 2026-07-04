@@ -153,12 +153,15 @@ def main():
         print(f"\n{'='*60}")
         print(f"  Loading: {dataset_name.upper()}")
 
+        batch_size = ds_cfg.get("BATCH_SIZE", config["BATCH_SIZE"])
+        augment    = ds_cfg.get("AUGMENT", False)
+
         # Call 1 — temp load for label extraction only
         tmp_loader, _, _ = get_loaders(
             data=dataset_name, 
             data_path=config["DATA_PATH"],
-            batch_size=config["BATCH_SIZE"],
-            seed=seed
+            batch_size=batch_size,
+            seed=seed,
         )
         train_labels_all = torch.cat(
             [y for _, y in tmp_loader]).squeeze().long()
@@ -173,8 +176,10 @@ def main():
             train_loader, val_loader, test_loader = get_loaders(
               data=dataset_name, 
               data_path=config["DATA_PATH"],
-              batch_size=config["BATCH_SIZE"],
-              seed=seed
+              batch_size=batch_size,
+              seed=seed,
+              augment=augment
+
             )
             run_num += 1
             print(f"\n  [{run_num}/{total_runs}] {model_name} on {dataset_name}")
