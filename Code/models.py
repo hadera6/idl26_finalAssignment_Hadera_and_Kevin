@@ -213,7 +213,7 @@ class AlexNetLite(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
         )
  
-        self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
             nn.Dropout(p=drop_rate),
             nn.Linear(64, num_classes),
@@ -225,26 +225,27 @@ class AlexNetLite(nn.Module):
         x = torch.flatten(x, 1)
         return self.classifier(x)
     
-class VGG16Lite(nn.Module):                                                    
+class VGG16Lite(nn.Module):
     #VGG16 with reduced complexity
 
     def __init__(self, in_channels, num_classes, **kwargs):
         super().__init__()
+ 
         drop_rate = kwargs.get("drop_rate", 0.5)
-
+ 
         self.features = nn.Sequential(
-            VGGBlock(in_channels, 32, num_convs=2),
+            VGGBlock(in_channels, 16, num_convs=2),
+            VGGBlock(16,32, num_convs=2),
             VGGBlock(32, 64, num_convs=2),
-            VGGBlock(64, 128, num_convs=2),
+            VGGBlock(64,128, num_convs=2),
         )
+ 
         self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
             nn.Dropout(p=drop_rate),
-            nn.Linear(128, 256),
-            nn.ReLU(inplace=True),
-            nn.Linear(256, num_classes),
+            nn.Linear(128, num_classes),
         )
-
+ 
     def forward(self, x):
         x = self.features(x)
         x = self.avgpool(x)
