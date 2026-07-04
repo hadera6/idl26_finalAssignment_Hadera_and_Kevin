@@ -38,49 +38,20 @@ def load_pretrained_weights(model, weights_dir, source_dataset, model_name, devi
         print(f"  [Transfer] Keys re-initialised (expected — classifier head): "
               f"{classifier_missing}")
     return True
+
 def freeze_stages(model, model_name, num_frozen_stages):
-    """Freeze a proportion of the backbone scaled to each architecture's depth.
+    """Freeze all backbone layers — classifier head remains trainable.
     """
     if num_frozen_stages <= 0:
         return
 
-    if model_name == "ResNet18":
-        stage_attrs = ["conv1", "bn1", "stage1", "stage2", "stage3", "stage4"]
-        to_freeze = stage_attrs[:num_frozen_stages]
-        for attr in to_freeze:
-            module = getattr(model, attr, None)
-            if module is not None:
-                for param in module.parameters():
-                    param.requires_grad = False
-        print(f"  [Transfer] Frozen ResNet stages: {to_freeze}")
+    frozen = 0
+    for name, param in model.named_parameters():
+        if "classifier" not in name:
+            param.requires_grad = False
+            frozen += 1
 
-    elif model_name == "VGG16":
-        children = list(model.features.children())
-        n_to_freeze = max(1, min(len(children) - 1,
-                                 round(num_frozen_stages * len(children) / 6)))
-        for child in children[:n_to_freeze]:
-            for param in child.parameters():
-                param.requires_grad = False
-        print(f"  [Transfer] VGG16: frozen first {n_to_freeze}/{len(children)} blocks")
-
-    else:  # AlexNet: group layers into MaxPool-delimited blocks, freeze proportionally
-        children = list(model.features.children())
-        blocks, current = [], []
-        for layer in children:
-            current.append(layer)
-            if layer.__class__.__name__ == "MaxPool2d":
-                blocks.append(current)
-                current = []
-        if current:
-            blocks.append(current)
-        n_blocks = len(blocks)
-        n_to_freeze = max(1, min(n_blocks - 1,
-                                 round(num_frozen_stages * n_blocks / 6)))
-        layers_to_freeze = [l for b in blocks[:n_to_freeze] for l in b]
-        for layer in layers_to_freeze:
-            for param in layer.parameters():
-                param.requires_grad = False
-        print(f"  [Transfer] AlexNet: frozen first {n_to_freeze}/{n_blocks} conv blocks")
+    print(f"  [Transfer] Backbone frozen ({frozen} param tensors) — classifier trains freely")
 
 
 def compute_class_weights(train_labels, num_classes, device):                  
