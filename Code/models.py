@@ -190,41 +190,35 @@ class ResNet18(nn.Module):
         return self.classifier(out)
     
 
-class AlexNetLite(nn.Module):                                             
-    #AlexNet with reduced complexity 
-    
+class AlexNetLite(nn.Module):
+ 
     def __init__(self, in_channels, num_classes, **kwargs):
         super().__init__()
         drop_rate = kwargs.get("drop_rate", 0.5)
-
+ 
         self.features = nn.Sequential(
-            nn.Conv2d(in_channels, 24, kernel_size=7, stride=2, padding=3),
-            nn.BatchNorm2d(24),
+            nn.Conv2d(in_channels, 32, kernel_size=7, stride=2, padding=3),
+            nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            nn.Conv2d(24, 64, kernel_size=5, padding=2),
+ 
+            nn.Conv2d(32, 64, kernel_size=5, padding=2),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, 96, kernel_size=3, padding=1),
-            nn.BatchNorm2d(96),
+ 
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
         )
+ 
         self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
             nn.Dropout(p=drop_rate),
-            nn.Linear(96, 256),
-            nn.ReLU(inplace=True),
-            nn.Linear(256, num_classes),
+            nn.Linear(64, num_classes),
         )
-
+ 
     def forward(self, x):
         x = self.features(x)
         x = self.avgpool(x)
@@ -288,7 +282,3 @@ class ResNet18Lite(nn.Module):
         out = self.avgpool(out)
         out = torch.flatten(out, 1)
         return self.classifier(out)
-
-
-
-
