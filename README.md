@@ -1,8 +1,8 @@
-# MAI/IDL SS26 — Final Assignment
-## BioHealth Diagnostics: Medical Image Classification Pipeline
+# Pipeline reconstruction — Final Assignment
 
-**Author:** MG
-**Enrollment:** [enrollment number]
+> **Authors:** Hadera Teame Hailu **Enrollment:** 10013703
+and Kevin K. Thomas 
+ 
 **Submission:** July 2026
 
 ---
@@ -29,7 +29,7 @@ Code/
   weights/        — saved model checkpoints (.pth files)
   results/        — benchmark.csv and profiling.csv output
 
-REPORT.md         — consolidated benchmark report (Tasks 1, 2, 3)
+REPORT.md         — benchmark report (Tasks 1, 2, 3)
 AUDIT_LOG.md      — full codebase audit with git commit references
 README.md         — this file
 assignment_final.pdf — task specification
@@ -83,10 +83,6 @@ results to `results/benchmark.csv` and `results/profiling.csv`. Already-trained
 models are skipped automatically.
 
 To run a specific dataset only:
-
-```json
-"RUN_ONLY": ["organs"]
-```
 
 ---
 
@@ -150,16 +146,6 @@ weights/                — {dataset}_{model}[_{training_state}].pth
 ```
 
 ---
-
-## Results Summary
-
-| Dataset | Best Model | Accuracy | Target | Status |
-|---------|-----------|----------|--------|--------|
-| cells | VGG16 | 98.51% | 90% | ✅ |
-| chest | AlexNet | 91.03% | 87% | ✅ |
-| lesions | ResNet18 | 75.61% | 67% | ✅ |
-| orgs | ResNet18 | 92.45% | 83% | ✅ |
-| organs (transfer) | ResNet18 freeze_2+aug | 70.50% | 40% | ✅ |
 
 Full analysis and discussion: see `REPORT.md`.
 Full audit trail: see `AUDIT_LOG.md`.
