@@ -1,6 +1,6 @@
 # AUDIT_LOG.md
 
-## Post-Incident Pipeline Reconstruction Audit Log
+## Pipeline Fix Audit Log
 
 ---
 
@@ -25,21 +25,42 @@
 | 17 | `train.py` | all dataset loop loads same dataset — wrong results for all runs | `get_loaders` called with hardcoded `config["DATA"]` instead of loop variable — every iteration loaded the same dataset ignoring the loop | Replaced `config["DATA"]` with `dataset_name` so each loop iteration loads the correct dataset | 9390ac0 |
 | 18 | `models.py` | VGGBlock receives padding as external parameter — each conv layer may need different padding | Passing a single padding value externally forces all conv layers in the block to use the same padding, preventing per-layer flexibility. Padding should be computed internally from kernel size so each conv gets the correct value automatically | Removed padding parameter from VGGBlock interface and computed internally as `kernel_size // 2` per conv layer | 9bca7b5 |
 | 19 | `fit.py` | Training crashes every epoch — val metrics never printed | `evaluate()` returns 5 values but `fit()` unpacked only 2. Python raises `ValueError: too many values to unpack` on the first validation call | Changed `val_loss, val_acc = self.evaluate(val_loader)` to `val_loss, val_acc, *_ = self.evaluate(val_loader)` | 359acb7 |
-
-
-
+| 20 | `models.py` | AlexNet and VGG16 classifier read spatial positions not features — causing severe train-test gap | No `AdaptiveAvgPool2d` — classifier received full spatial feature map 192×4×4 and 512×2×2 — model memorised where features appear in training images not what they are | Added `self.avgpool = nn.AdaptiveAvgPool2d((1,1))` to AlexNet and VGG16, called in `forward()`, corrected `nn.Linear` input to match pooled output — 3072→192 in AlexNet and 2048→512 in VGG16 | cd04476 |
 
 
 ## Enhancement commits
 
 | # | File | What was added | Reason | Git commit hash |
 |---|------|---------------|--------|-----------------|
-| 20 | `train.py` | Loop over all datasets and models from config | Original trained only one dataset/model per run. Full benchmark requires 15 runs across 5 datasets and 3 models | b4cbab4 |
-| 21 | `train.py` | `compute_class_weights` — inverse frequency weighting | `lesions` class 5 is 67% of training data. Uniform loss causes model to predict majority class. Weighted loss forces equal attention to all classes | ca58386 |
-| 22 | `train.py` | `save_result` — append results to CSV after every run | Results existed only in memory. Colab disconnect or session end lost everything. Persistent CSV saves each run immediately to Drive | 91a8342 |
-| 23 | `train.py` | `already_done` — skip completed runs on restart | No way to resume after interruption. Checking for saved weight file allows training to continue from where it stopped across multiple sessions | 84f52f9 |
+| 21 | `train.py` | Loop over all datasets and models from config | Original trained only one dataset/model per run. Full benchmark requires 15 runs across 5 datasets and 3 models | b4cbab4 |
+| 22 | `train.py` | `compute_class_weights` — inverse frequency weighting | `lesions` class 5 is 67% of training data. Uniform loss causes model to predict majority class. Weighted loss forces equal attention to all classes | ca58386 |
+| 23 | `train.py` | `save_result` — append results to CSV after every run | Results existed only in memory. Colab disconnect or session end lost everything. Persistent CSV saves each run immediately to Drive | 91a8342 |
+| 24 | `train.py` | `already_done` — skip completed runs on restart | No way to resume after interruption. Checking for saved weight file allows training to continue from where it stopped across multiple sessions | 84f52f9 |
+| 25 | `train.py` | Weighted loss removed — CrossEntropyLoss reverted to unweighted | `compute_class_weights` and `weight=class_weights` were added to handle class imbalance but showed inconsistent benefit across datasets — removed to isolate effect and test alternative approaches | ae6541b |
+| 26 | `data.py` | No normalisation — raw float32 pixel values caused unstable training | Without normalisation loss landscape is uneven causing wild val loss spikes and slow convergence especially on small datasets | 32e8379 |
+| 27 | `train.py` | Training parameters hardcoded to global config — no per-dataset control | drop_rate, activation, learning_rate and epochs read from global config only — per-dataset tuning impossible without code changes | 13004aa |
+| 28 | `train.py` `fit.py` | No learning rate decay — constant LR throughout training caused late-epoch bouncing and suboptimal convergence | LR was fixed for all epochs — model unable to fine-tune in later epochs | 23cd076 |
+| 29 | `train.py` `fit.py` | No early stopping — training always ran full epochs regardless of convergence, wasting compute and risking overfit | No mechanism to halt training when val loss stopped improving and no best weight preservation between epochs | adae156 |
+| 30 | `train.py` | `compute_class_weights` — inverse frequency weighting | `lesions` class 5 is 67% of training data. Uniform loss causes model to predict majority class. Weighted loss forces equal attention to all classes | eb30e5f |
+| 31 | `models.py` | No lightweight architecture available for green initiative | All three models exceed 5M parameters — high compute cost unsuitable for diagnostic devices  | ce65003 |
+| 32 | `train.py` | No resource consumption tracking — runtime latency and memory not measured | Pipeline had no visibility into computational cost per model per dataset — green initiative verification impossible without profiling metrics | c73cdb9 |
+| 33 | `train.py` `data.py` | Non-deterministic training — results vary between runs with identical config | No seed control on weight initialisation or batch shuffle order — impossible to reproduce results or compare models fairly | 71467b0 |
+| 34 | `train.py` | Iterator exhaustion caused silent training collapse — second and third models per dataset received empty data loader | Label extraction consumed the shared train loader before model training loop — subsequent models trained on zero batches | c1c9223 |
+| 35 | `train.py` | CUDA memory profiling crashed on CPU runtime | torch.cuda.reset_peak_memory_stats called unconditionally — raises AttributeError when no CUDA device is available | 0ac2a06 |
+| 36 | `train.py` | Peak memory profiling crashed on CPU runtime | torch.cuda.max_memory_allocated called unconditionally — raises AttributeError when no CUDA device is available | 1772c8d |
+| 37 | `models.py` | No lightweight VGG architecture available for green initiative | VGG16 has 15M parameters — excessive compute cost for diagnostic deployment | 8163f1a |
+| 38 | `models.py` | No lightweight ResNet architecture available for green initiative | ResNet18 has 11M parameters — excessive compute cost for diagnostic deployment | df95fc2 |
+| 39 | `config.json` | Per-dataset MODELS arrays, hyperparameter overrides, reproducibility settings, and transfer learning keys for organs | Rigid global structure forced same configuration across all datasets with no way to tune or extend per dataset | 76af0cb |
+| 40 | `train.py` | Per-dataset MODELS reading and total_runs recomputation | Global MODELS list forced same models across all datasets with no per-dataset control | 766009f |
+| 41 | `train.py` | load_pretrained_weights() and freeze_stages() | No mechanism existed to initialise a model from another dataset's trained weights | bf9d0e0 |
+| 42 | `train.py` | Transfer learning integrated into main training loop — reads TRANSFER_FROM and FROZEN_STAGES, calls load and freeze functions, optimizer filters trainable params only | No transfer learning was applied during training despite functions being defined | 5818160 |
+| 43 | `train.py` | Training state tracking added to distinguish scratch and transfer learning runs in weights and benchmark output | Scratch and transfer runs were indistinguishable — results could not be compared or attributed correctly | 358e928 |
+| 44 | `data.py` | Augmentation support added for scarce training sets via AugmentedDataset class and augment flag in get_loaders | No augmentation mechanism existed — small datasets trained on identical images every epoch leading to fast overfitting | b5a7fb3 |
+| 45 | `models.py` | AlexNetLite updated — further reduced AlexNet variant at 91,147 params (30× smaller than original) | AlexNetLite at 400K params still exceeded requirements for simpler datasets | 9ab99d8 |
+| 46 | `models.py` | VGG16Micro added — further reduced VGG16 variant at 296,571 params (37× smaller than original VGG16) | VGG16Lite at 324,075 params still exceeded requirements for simpler datasets | 5c65c8b |
+| 47 | `models.py` | ResNet18Micro added — further reduced ResNet18 variant at 224,228 params (50× smaller than original ResNet18) | ResNet18Lite at 170,859 params still exceeded requirements for simpler datasets | 7bdbace |
+| 48 | `train.py` | Per-dataset batch size support added — read from dataset config with global fallback | Batch size was hardcoded globally — datasets with different data scales could not be configured independently | f8080f7 |
+| 49 | `train.py` | freeze_stages() modified — per-architecture branch logic replaced with universal parameter freeze based on classifier name | Architecture-specific freezing provided no measurable accuracy benefit over a simpler unified approach | f65e493 |
 
 
 
-*Course: MAI/IDL SS26 — Final Assignment*
-*Repository: https://github.com/hadera6/idl26_finalAssignment_Hadera_and_Kevin.git*
