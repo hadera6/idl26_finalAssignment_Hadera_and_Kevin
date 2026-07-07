@@ -125,10 +125,19 @@ Three Lite model variants reduce computational footprint while maintaining bench
 ---
 
 ### 2.4 Analysis
+ 
+Micro models pass all 12 benchmark targets. The maximum accuracy gap is 7.3% (ResNet18Micro on lesions: 68.53% vs 75.81% — still well above the 67% target). On simpler datasets the gap is under 1%. Notably VGG16Micro outperforms full VGG16 on cells and orgs, and AlexNetMicro outperforms full AlexNet on chest — reduced capacity improves generalisation on tasks where full models have excess capacity.
+ 
+**Parameter reduction:** Average 39× reduction across three pairs — combined full-model total of ~25M parameters reduced to ~612K (97.5% reduction), with all benchmark targets maintained.
+ 
+**Memory savings:** Peak GPU memory reduced by 2.5–11.6×. ResNet18Micro drops from 2,460 MB to 217 MB — deployable on devices with as little as 256 MB GPU memory. AlexNetMicro requires only 66–72 MB across all datasets.
+ 
+**Training time:** Average reduction is ~4.5× for VGG16, ~3.5× for ResNet18, ~2.5× for AlexNet. Across a full benchmark sweep, switching from full to micro models saves an estimated 3–4 hours of GPU time.
+ 
+**Behaviour on lesions:** All three micro models pass the 67% target despite 30–50× fewer parameters. Reduced capacity prevents majority class overfitting, which benefits minority class learning on this severely imbalanced dataset.
+ 
 
-Lite models pass all 12 benchmark targets with a maximum accuracy gap of 7.3% (ResNet18Lite on lesions: 68.53% vs 75.81% — still well above 67% target). ResNet18Lite delivers the largest efficiency gains — up to 11.3× faster training and 11.6× less memory. The reduction is architecturally principled (preserving structure and proportions) rather than arbitrary parameter cutting.
-
-> **Most efficient model: AlexNetLite** — 6–42s training, 66–72MB peak memory, 0.017ms latency, all 12 targets passed ✅
+> **Most efficient model: AlexNetLite** — 6–42s training, 66–72MB peak memory, 0.017ms latency, all 12 targets passed
 
 ---
 
@@ -152,31 +161,23 @@ The organs dataset contains approximately 450 training samples across 11 organ c
 | organs | **ResNet18** | **freeze_0** | **71.00%** | **0.6877** | **0.6867** | **0.6736** | 40% |
 | organs | AlexNet | freeze_1 | 62.50% | 0.6072 | 0.5773 | 0.5664 | 40% |
 | organs | VGG16 | freeze_1 | 55.50% | 0.5555 | 0.5283 | 0.4995 | 40% |
+| organs | ResNet18 | freeze_1 | 62.00% | 0.5951 | 0.5743 | 0.5686 | 40% |
 
 **All evaluated configurations exceed the 40% accuracy target.** 
 
 ---
 
 ### 3.3 Impact of Transfer Learning
-
-| Model | Scratch | freeze_0 (finetune) | Improvement |
-|-------|:-------:|:-------------------:|:-----------:|
-| AlexNet | 62.00% | 67.50% | +5.5% |
-| VGG16 | 58.50% | 66.50% | +8.0% |
-| ResNet18 | 68.00% | **71.00%** | **+3.0%** |
-
-**ResNet18 with freeze_0 achieved the best result: 71.00% accuracy, F1 0.6736.**
-
----
-
-### 3.4 freeze_0 vs freeze_1
-
-Freezing the backbone (freeze_1) consistently underperforms finetune (freeze_0) on organs. With only ~450 training samples, the classifier alone has insufficient data to learn discriminative features without backbone adaptation.
-
-| Model | freeze_0 | freeze_1 | Difference |
-|-------|:--------:|:--------:|:----------:|
-| AlexNet | 67.50% | 62.50% | −5.0% |
-| VGG16 | 66.50% | 55.50% | −11.0% |
+ 
+| Model | Scratch | freeze_0 | freeze_1 | Best State |
+|-------|:-------:|:--------:|:--------:|:----------:|
+| AlexNet | 62.00% | 67.50% | 62.50% | freeze_0 (+5.5%) |
+| VGG16 | 58.50% | 66.50% | 55.50% | freeze_0 (+8.0%) |
+| ResNet18 | 68.00% | **71.00%** | 62.00% | **freeze_0 (+3.0%)** |
+ 
+**Best result: ResNet18 freeze_0 — 71.00% accuracy, F1 0.6736.**
+ 
+All three models improve with freeze_0 (finetune). freeze_1 (frozen backbone) consistently underperforms and in some cases falls below scratch — demonstrating that with only 450 training samples, the classifier alone has insufficient data to learn discriminative features without backbone adaptation.
 
 ---
 
@@ -192,10 +193,10 @@ All freeze_0 models converge to 66–71% — a dataset ceiling driven by the 450
 
 | Priority | Action |
 |----------|--------|
-| ✅ Best config | ResNet18, freeze_0, LR 5e-5, WD 0.005, batch 8, epochs 20 |
-| ✅ Use | Stratified validation split — 50-sample random val set gives unreliable early stopping signal |
-| ✅ Consider | Ensemble of all three freeze_0 models — expected 72–75% with no additional training |
-| ⚠️ Avoid | freeze_1 for VGG16 — loses 11% accuracy vs finetune at this dataset scale |
+|  Best config | ResNet18, freeze_0, LR 5e-5, WD 0.005, batch 8, epochs 20 |
+|  Use | Stratified validation split — 50-sample random val set gives unreliable early stopping signal |
+|  Consider | Combine predictions from all three freeze_0 models — expected 72–75% with no additional training |
+|  Avoid | freeze_1 for VGG16 — loses 11% accuracy vs finetune at this dataset scale |
 
 ---
 
