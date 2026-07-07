@@ -3,7 +3,6 @@
     "WEIGHTS_PATH": "weights/",
     "RESULTS_PATH": "results/benchmark.csv",
     "PROFILING_PATH": "results/profiling.csv",
-
     "BATCH_SIZE": 64,
     "EPOCHS": 20,
     "LEARNING_RATE": 0.001,
@@ -11,10 +10,10 @@
     "ACTIVATION": "ReLU",
     "PATIENCE": 10,
     "SEED": 0,
-
     "DATASETS": {
         "cells": {
-            "MODELS": ["ResNet18"],
+            "MODELS": ["AlexNet","VGG16","ResNet18",
+                        "AlexNetLite","VGG16Lite","ResNet18Lite" ],
             "CHANNELS": 3,
             "NUM_CLASSES": 8,
             "EPOCHS": 30,
@@ -22,41 +21,49 @@
             "DROP_RATE": 0.3
         },
         "chest": {
-            "MODELS": ["VGG16"],
+            "MODELS": ["AlexNet","VGG16","ResNet18",
+                        "AlexNetLite","VGG16Lite","ResNet18Lite" ],
             "CHANNELS": 1,
             "NUM_CLASSES": 2,
-            "EPOCHS": 20,
+            "EPOCHS": 30,
             "LEARNING_RATE": 0.001,
             "DROP_RATE": 0.5
         },
         "lesions": {
-            "MODELS": ["AlexNet"],
+            "MODELS": ["AlexNet","VGG16","ResNet18",
+                        "AlexNetLite","VGG16Lite","ResNet18Lite" ],
             "CHANNELS": 3,
             "NUM_CLASSES": 7,
-            "EPOCHS": 60,
-            "LEARNING_RATE": 0.0005,
-            "DROP_RATE": 0.5,
-            "PATIENCE": 999,
-            "USE_SCHEDULER": false,
-            "NO_RESTORE": true
-        },
-        "organs": {
-            "MODELS": ["ResNet18"],
-            "CHANNELS": 1,
-            "NUM_CLASSES": 11,
-            "EPOCHS": 30,
+            "EPOCHS": 50,
             "LEARNING_RATE": 0.0001,
             "DROP_RATE": 0.3,
-            "TRANSFER_FROM": "orgs",
-            "FROZEN_STAGES": 0
+            "PATIENCE": 999,
+            "USE_SCHEDULER": false,
+            "NO_RESTORE": true,
+            "WEIGHT_DECAY": 0.0
         },
         "orgs": {
-            "MODELS": ["ResNet18"],
+            "MODELS": ["AlexNet","VGG16","ResNet18",
+                        "AlexNetLite","VGG16Lite","ResNet18Lite" ],
             "CHANNELS": 1,
             "NUM_CLASSES": 11,
             "EPOCHS": 20,
             "LEARNING_RATE": 0.001,
             "DROP_RATE": 0.5
+        },
+        "organs": {
+            "MODELS": ["AlexNet","VGG16","ResNet18"],
+            "CHANNELS": 1,
+            "NUM_CLASSES": 11,
+            "LEARNING_RATE": 0.0005,
+            "WEIGHT_DECAY": 0.005,
+            "BATCH_SIZE": 8,
+            "EPOCHS": 50,
+            "DROP_RATE": 0.3,
+            "USE_SCHEDULER": false,
+            "TRANSFER_FROM": "orgs",
+            "FROZEN_STAGES": 1,
+            "AUGMENT": true
         }
     }
 }
