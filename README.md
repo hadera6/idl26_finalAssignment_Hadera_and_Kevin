@@ -1,19 +1,16 @@
 # Pipeline reconstruction — Final Assignment
 
-> **Authors:** Hadera Teame Hailu **Enrollment:** 10013703
-and Kevin K. Thomas 
- 
+**Authors:**
+> **Hadera Teame Hailu** --- Enrollment No :  **10013703** <br>
+> **Kevin K. Thomas**  --- Enrollment No :  **10013495**
+   
 **Submission:** July 2026
 
 ---
 
 ## Overview
 
-This repository contains the reconstructed, corrected, and extended machine learning
-pipeline for the MAI/IDL SS26 Final Assignment. Starting from a deliberately broken
-codebase, the pipeline was audited, stabilised, benchmarked across four medical imaging
-datasets, extended with a green initiative (lite models), and augmented with a
-transfer learning framework for scarce-data scenarios.
+This repository contains the reconstructed and extended machine learning pipeline for the MAI/IDL SS26 Final Assignment. Starting from a broken codebase, the pipeline was audited, stabilised, benchmarked across four medical imaging datasets, extended with a green initiative (lite models), and a transfer learning framework for scarce-data.
 
 ---
 
@@ -62,11 +59,11 @@ Place dataset `.pt` files in `Code/data/`:
 
 ```
 Code/data/
-  cells_data.pt
-  chest_data.pt
-  lesions_data.pt
-  organs_data.pt
-  orgs_data.pt
+  cells.pt
+  chest.pt
+  lesions.pt
+  organs.pt
+  orgs.pt
 ```
 
 ---
@@ -81,8 +78,6 @@ python train.py
 The pipeline reads `config.json`, trains each dataset/model combination, and saves
 results to `results/benchmark.csv` and `results/profiling.csv`. Already-trained
 models are skipped automatically.
-
-To run a specific dataset only:
 
 ---
 
