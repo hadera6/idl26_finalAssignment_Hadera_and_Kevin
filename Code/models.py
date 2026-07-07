@@ -191,7 +191,9 @@ class ResNet18(nn.Module):
     
 
 class AlexNetLite(nn.Module):
- 
+
+    #AlexNet with reduced complexity
+
     def __init__(self, in_channels, num_classes, **kwargs):
         super().__init__()
         drop_rate = kwargs.get("drop_rate", 0.5)

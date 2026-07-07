@@ -27,7 +27,7 @@ class AugmentedDataset(Dataset):
         return img, self.labels[idx]
 
 def get_loaders(data, data_path, batch_size,seed=0, val_split=0.1,augment=False):
-    d_path = Path(data_path) / f"{data}_data.pt"
+    d_path = Path(data_path) / f"{data}.pt"
     data_dict = torch.load(d_path)
 
     total_samples = data_dict['train_images'].shape[0]
