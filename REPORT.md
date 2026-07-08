@@ -151,8 +151,8 @@ The organs dataset contains approximately 450 training samples across 11 organ c
 
 ### 3.2 Scarce-Data Benchmark Matrix
 
-| Dataset | Model | Training State | Accuracy | Precision | Recall | F1 | Target | Status |
-|---------|-------|:-------------:|:--------:|:---------:|:------:|:--:|:------:|:------:|
+| Dataset | Model | Training State | Accuracy | Precision | Recall | F1 | Target |
+|---------|-------|:-------------:|:--------:|:---------:|:------:|:--:|:------:|
 | organs | AlexNet | scratch | 62.00% | 0.6174 | 0.5724 | 0.5319 | 40% |
 | organs | VGG16 | scratch | 58.50% | 0.5386 | 0.5713 | 0.5304 | 40% |
 | organs | ResNet18 | scratch | 68.00% | 0.6262 | 0.6476 | 0.6332 | 40% |
