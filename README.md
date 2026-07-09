@@ -23,8 +23,8 @@ Code/
   fit.py          — training loop, early stopping, best weight restoration
   models.py       — AlexNet, VGG16, ResNet18 and Lite variants
   config.json     — all hyperparameters and run configuration
-  weights/        — saved model checkpoints (.pth files)
-  results/        — benchmark.csv and profiling.csv output
+weights/          — saved model checkpoints (.pth files)
+results/          — benchmark.csv and profiling.csv output
 
 REPORT.md         — benchmark report (Tasks 1, 2, 3)
 AUDIT_LOG.md      — full codebase audit with git commit references
