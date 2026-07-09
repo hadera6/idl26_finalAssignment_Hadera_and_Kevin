@@ -10,7 +10,7 @@
 
 ## Overview
 
-This repository contains the reconstructed and extended machine learning pipeline for the MAI/IDL SS26 Final Assignment. Starting from a broken codebase, the pipeline was audited, stabilised, benchmarked across four medical imaging datasets, extended with a green initiative (lite models), and a transfer learning framework for scarce-data.
+This repository contains the reconstructed and extended  pipeline for the MAI/IDL SS26 Final Assignment. Starting from a broken codebase, the pipeline was audited, stabilised, benchmarked across four medical imaging datasets, extended with a green initiative (lite models), and a transfer learning framework for scarce-data.
 
 ---
 
