@@ -3,7 +3,11 @@
 
 ### Bug Fixes
 
-| # | File | How the Problem Manifests | Root Cause | Fix | Commit |
+> **Note:** The codebase contained 15–17 distinct issues resolved across 20 commits. The higher commit count reflects fixes that were incomplete on the first attempt and required follow-up commits to fully resolve.
+
+> Entries 1–20 are bug fixes. Entries 21 onwards are enhancements new features added to the pipeline such as benchmarking, profiling, lighter models, and transfer learning.
+
+| # | File | How the Problem Manifests | Root Cause | Fix applied | Commit |
 |---|------|--------------------------|------------|-----|--------|
 | 1 | `config.json` | Script crashes with `JSONDecodeError` on startup before anything runs | `config.json` did not exist — `json.load()` on a missing file raises an immediate exception | Created `config.json` with all required keys | e5192a0 |
 | 2 | `data.py` | Validation accuracy inflated — metrics unreliable across all runs | `train_data` assigned the full array without slicing — both train and val splits contained identical samples | Sliced `train_data` and `train_labels` to `[:val_start]` | 1d1575e |
