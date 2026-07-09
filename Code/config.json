@@ -62,7 +62,7 @@
             "DROP_RATE": 0.3,
             "USE_SCHEDULER": false,
             "TRANSFER_FROM": "orgs",
-            "FROZEN_STAGES": 1,
+            "FROZEN_STAGES": 0,
             "AUGMENT": true
         }
     }
